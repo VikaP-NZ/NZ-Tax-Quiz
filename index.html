@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NZ Accounting Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 40px;
+            background-color: #FFF8DC; /* Light Yellow */
+        }
+        .quiz-container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            border: 2px solid #000000; /* Black Border */
+            border-radius: 10px;
+            box-shadow: 4px 4px 15px rgba(0,0,0,0.2);
+            background-color: white;
+            transition: all 0.3s ease-in-out;
+            position: relative;
+            display: none;
+        }
+        .active {
+            display: block;
+        }
+        h2 {
+            color: #003366; /* Dark Blue */
+            font-size: 24px;
+        }
+        p {
+            color: black;
+            font-size: 16px;
+        }
+        button {
+            display: inline-block;
+            width: 80%;
+            padding: 12px;
+            margin: 8px 0;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #007BFF; /* Blue */
+            color: white;
+            font-size: 16px;
+            transition: all 0.3s ease-in-out;
+        }
+        button:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+        .back-button {
+            background-color: #808080; /* Gray */
+        }
+        .back-button:hover {
+            background-color: #666666;
+        }
+        .correct {
+            color: green;
+            font-weight: bold;
+        }
+        .incorrect {
+            color: red;
+            font-weight: bold;
+        }
+        .top-buttons {
+            position: absolute;
+            top: 10px;
+            font-size: 14px;
+            color: #808080; /* Gray */
+            cursor: pointer;
+        }
+        .statistics-btn {
+            left: 15px;
+        }
+        .total-questions {
+            right: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main Menu -->
+    <div class="quiz-container active" id="main-menu">
+        <p class="top-buttons statistics-btn" onclick="showStatistics()">Statistics</p>
+        <h2>NZ Tax Accounting Quiz</h2>
+        <p class="top-buttons total-questions" id="total-questions">Total Questions: 0</p>
+        <p>Select a Difficulty of Quiz:</p>
+        
+        <!-- Difficulty selection -->
+        <div class="difficulty-buttons">
+            <button onclick="setDifficulty('Easy')">Easy</button>
+            <button onclick="setDifficulty('Moderate')">Moderate</button>
+            <button onclick="setDifficulty('Advanced')">Advanced</button>
+        </div>
+        
+        <p id="aspect-title" class="hidden">Select a Tax Aspect:</p>
+        <div id="aspect-buttons" class="hidden"></div>
+    </div>
+
+    <!-- Quiz Container -->
+    <div class="quiz-container" id="quiz-container">
+        <h2>NZ Accounting Quiz</h2>
+        <p id="question-number"></p>
+        <p id="question-text"></p>
+        <div id="answers"></div>
+        <p id="feedback"></p>
+        <button id="back-btn" class="hidden back-button" onclick="prevQuestion()">Back</button>
+        <button id="next-btn" class="hidden" onclick="nextQuestion()">Next</button>
+        <button id="finish-btn" class="hidden" onclick="finishQuiz()">Finish</button>
+    </div>
+
+    <!-- Statistics Page -->
+    <div class="quiz-container" id="statistics-page">
+        <h2>Quiz Statistics</h2>
+        <table border="1" width="100%">
+            <thead>
+                <tr>
+                    <th>Date & Time</th>
+                    <th>Score</th>
+                    <th>Comment</th>
+                </tr>
+            </thead>
+            <tbody id="stats-table-body"></tbody>
+        </table>
+        <button class="back-button" onclick="goBackToMainMenu()">Back to Main Menu</button>
+    </div>
+
+    <script src="questions.js"></script>
+    <script>
+        let selectedAspect = "";
+        let selectedDifficulty = "";
+        let filteredQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        function updateTotalQuestionsCount() {
+            document.getElementById("total-questions").innerText = `Total Questions: ${questions.length}`;
+        }
+
+        function setDifficulty(difficulty) {
+            selectedDifficulty = difficulty;
+            document.getElementById("aspect-buttons").classList.remove("hidden");
+            document.getElementById("aspect-title").classList.remove("hidden");
+            displayAspects();
+        }
+
+        function displayAspects() {
+            const aspectButtonsDiv = document.getElementById("aspect-buttons");
+            aspectButtonsDiv.innerHTML = "";
+
+            const aspects = [...new Set(questions.map(q => q.aspect))];
+
+            aspects.forEach(aspect => {
+                let count = questions.filter(q => q.aspect === aspect && q.difficulty === selectedDifficulty).length;
+                const button = document.createElement("button");
+                button.innerText = `${aspect} - ${count} questions`;
+
+                if (count > 0) {
+                    button.onclick = () => startQuiz(aspect);
+                } else {
+                    button.onclick = () => alert("No questions available.");
+                }
+
+                aspectButtonsDiv.appendChild(button);
+            });
+        }
+
+        function startQuiz(aspect) {
+            selectedAspect = aspect;
+            switchPage("quiz-container");
+
+            filteredQuestions = questions.filter(q => q.aspect === selectedAspect && q.difficulty === selectedDifficulty);
+            shuffleQuestions();
+            currentQuestionIndex = 0;
+            score = 0;
+            displayQuestion();
+        }
+
+        function shuffleQuestions() {
+            for (let i = filteredQuestions.length - 1; i > 0; i--) {
+                let j = Math.floor(Math.random() * (i + 1));
+                [filteredQuestions[i], filteredQuestions[j]] = [filteredQuestions[j], filteredQuestions[i]];
+            }
+        }
+
+        function displayQuestion() {
+            if (currentQuestionIndex >= filteredQuestions.length) {
+                finishQuiz();
+                return;
+            }
+
+            const questionObj = filteredQuestions[currentQuestionIndex];
+            document.getElementById("feedback").innerText = "";
+            document.getElementById("next-btn").classList.add("hidden");
+            document.getElementById("finish-btn").classList.add("hidden");
+            document.getElementById("back-btn").classList.remove("hidden");
+            document.getElementById("question-number").innerText = `Question ${currentQuestionIndex + 1} of ${filteredQuestions.length}`;
+            document.getElementById("question-text").innerText = questionObj.question;
+
+            const answersDiv = document.getElementById("answers");
+            answersDiv.innerHTML = "";
+
+            questionObj.answers.forEach((answer, index) => {
+                const button = document.createElement("button");
+                button.innerText = answer;
+                button.onclick = () => checkAnswer(index);
+                answersDiv.appendChild(button);
+            });
+
+            if (currentQuestionIndex === filteredQuestions.length - 1) {
+                document.getElementById("finish-btn").classList.remove("hidden");
+            } else {
+                document.getElementById("next-btn").classList.remove("hidden");
+            }
+        }
+
+        function checkAnswer(selectedIndex) {
+            const questionObj = filteredQuestions[currentQuestionIndex];
+            document.getElementById("feedback").innerHTML = selectedIndex === questionObj.correct
+                ? `<span class='correct'>Correct!</span> ${questionObj.explanation}`
+                : `<span class='incorrect'>Incorrect.</span> ${questionObj.explanation}`;
+        }
+
+        function finishQuiz() {
+            saveQuizResult();
+            switchPage("statistics-page");
+        }
+
+        function showStatistics() {
+            switchPage("statistics-page");
+        }
+
+        function switchPage(pageId) {
+            document.querySelectorAll(".quiz-container").forEach(el => el.classList.remove("active"));
+            document.getElementById(pageId).classList.add("active");
+        }
+
+        updateTotalQuestionsCount();
+    </script>
+</body>
+</html>
