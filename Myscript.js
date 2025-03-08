@@ -1,3 +1,5 @@
+let selectedAspect = "";
+let selectedDifficulty = "";
 let filteredQuestions = [];
 let currentQuestionIndex = 0;
 let score = 0;
@@ -10,7 +12,7 @@ function shuffleArray(array) {
     }
 }
 
-// 🚀 Load Questions (Using questions.js Instead of JSON)
+// 🚀 Load Questions from `questions.js`
 function loadQuestions() {
     if (!questions || questions.length === 0) {
         console.error("Error: Questions not loaded.");
@@ -121,14 +123,60 @@ function nextQuestion() {
     displayQuestion();
 }
 function finishQuiz() {
-    alert(`Quiz Completed! Your score: ${score} / ${filteredQuestions.length}`);
-    goBackToMainMenu();
+    saveQuizResult();
+    switchPage("statistics-page");
 }
 
-// 🚀 Switch Page
+// 🚀 Save Quiz Result to Local Storage
+function saveQuizResult() {
+    const results = JSON.parse(localStorage.getItem("quizResults")) || [];
+    const newResult = {
+        date: new Date().toLocaleString(),
+        score: `${score} / ${filteredQuestions.length}`,
+        percentage: (score / filteredQuestions.length) * 100
+    };
+    results.push(newResult);
+    localStorage.setItem("quizResults", JSON.stringify(results));
+    displayStatistics();
+}
+
+// 🚀 Show Statistics
+function showStatistics() {
+    switchPage("statistics-page");
+    displayStatistics();
+}
+
+// 🚀 Display Quiz Statistics
+function displayStatistics() {
+    const statsTable = document.getElementById("stats-table-body");
+    statsTable.innerHTML = "";
+    
+    const results = JSON.parse(localStorage.getItem("quizResults")) || [];
+    
+    results.forEach(result => {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${result.date}</td><td>${result.score}</td><td>${getComment(result.percentage)}</td>`;
+        statsTable.appendChild(row);
+    });
+}
+
+// 🚀 Generate Comment Based on Score
+function getComment(percentage) {
+    if (percentage === 100) return "Excellent! 🎉";
+    if (percentage >= 80) return "Great job! 💯";
+    if (percentage >= 50) return "Good effort! 👍";
+    return "Keep practicing! 💪";
+}
+
+// 🚀 Switch Page Function
 function switchPage(pageId) {
     document.querySelectorAll(".quiz-container").forEach(el => el.classList.remove("active"));
     document.getElementById(pageId).classList.add("active");
+}
+
+// 🚀 Go Back to Main Menu
+function goBackToMainMenu() {
+    switchPage("main-menu");
 }
 
 // 🚀 Initialize
