@@ -15,7 +15,7 @@
             max-width: 600px;
             margin: auto;
             padding: 20px;
-            border: 2px solid #000000; /* Black Border */
+            border: 2px solid #000000;
             border-radius: 10px;
             box-shadow: 4px 4px 15px rgba(0,0,0,0.2);
             background-color: white;
@@ -27,7 +27,7 @@
             display: block;
         }
         h2 {
-            color: #003366; /* Dark Blue */
+            color: #003366;
             font-size: 24px;
         }
         p {
@@ -42,7 +42,7 @@
             cursor: pointer;
             border: none;
             border-radius: 5px;
-            background-color: #007BFF; /* Blue */
+            background-color: #007BFF;
             color: white;
             font-size: 16px;
             transition: all 0.3s ease-in-out;
@@ -52,7 +52,7 @@
             transform: scale(1.05);
         }
         .back-button {
-            background-color: #808080; /* Gray */
+            background-color: #808080;
         }
         .back-button:hover {
             background-color: #666666;
@@ -69,7 +69,7 @@
             position: absolute;
             top: 10px;
             font-size: 14px;
-            color: #808080; /* Gray */
+            color: #808080;
             cursor: pointer;
         }
         .statistics-btn {
@@ -89,7 +89,6 @@
         <p class="top-buttons total-questions" id="total-questions">Total Questions: 0</p>
         <p>Select a Difficulty of Quiz:</p>
         
-        <!-- Difficulty selection -->
         <div class="difficulty-buttons">
             <button onclick="setDifficulty('Easy')">Easy</button>
             <button onclick="setDifficulty('Moderate')">Moderate</button>
@@ -128,117 +127,9 @@
         <button class="back-button" onclick="goBackToMainMenu()">Back to Main Menu</button>
     </div>
 
+    <!-- Load Questions & Script -->
     <script src="questions.js"></script>
-    <script>
-        let selectedAspect = "";
-        let selectedDifficulty = "";
-        let filteredQuestions = [];
-        let currentQuestionIndex = 0;
-        let score = 0;
+    <script src="script.js"></script>
 
-        function updateTotalQuestionsCount() {
-            document.getElementById("total-questions").innerText = `Total Questions: ${questions.length}`;
-        }
-
-        function setDifficulty(difficulty) {
-            selectedDifficulty = difficulty;
-            document.getElementById("aspect-buttons").classList.remove("hidden");
-            document.getElementById("aspect-title").classList.remove("hidden");
-            displayAspects();
-        }
-
-        function displayAspects() {
-            const aspectButtonsDiv = document.getElementById("aspect-buttons");
-            aspectButtonsDiv.innerHTML = "";
-
-            const aspects = [...new Set(questions.map(q => q.aspect))];
-
-            aspects.forEach(aspect => {
-                let count = questions.filter(q => q.aspect === aspect && q.difficulty === selectedDifficulty).length;
-                const button = document.createElement("button");
-                button.innerText = `${aspect} - ${count} questions`;
-
-                if (count > 0) {
-                    button.onclick = () => startQuiz(aspect);
-                } else {
-                    button.onclick = () => alert("No questions available.");
-                }
-
-                aspectButtonsDiv.appendChild(button);
-            });
-        }
-
-        function startQuiz(aspect) {
-            selectedAspect = aspect;
-            switchPage("quiz-container");
-
-            filteredQuestions = questions.filter(q => q.aspect === selectedAspect && q.difficulty === selectedDifficulty);
-            shuffleQuestions();
-            currentQuestionIndex = 0;
-            score = 0;
-            displayQuestion();
-        }
-
-        function shuffleQuestions() {
-            for (let i = filteredQuestions.length - 1; i > 0; i--) {
-                let j = Math.floor(Math.random() * (i + 1));
-                [filteredQuestions[i], filteredQuestions[j]] = [filteredQuestions[j], filteredQuestions[i]];
-            }
-        }
-
-        function displayQuestion() {
-            if (currentQuestionIndex >= filteredQuestions.length) {
-                finishQuiz();
-                return;
-            }
-
-            const questionObj = filteredQuestions[currentQuestionIndex];
-            document.getElementById("feedback").innerText = "";
-            document.getElementById("next-btn").classList.add("hidden");
-            document.getElementById("finish-btn").classList.add("hidden");
-            document.getElementById("back-btn").classList.remove("hidden");
-            document.getElementById("question-number").innerText = `Question ${currentQuestionIndex + 1} of ${filteredQuestions.length}`;
-            document.getElementById("question-text").innerText = questionObj.question;
-
-            const answersDiv = document.getElementById("answers");
-            answersDiv.innerHTML = "";
-
-            questionObj.answers.forEach((answer, index) => {
-                const button = document.createElement("button");
-                button.innerText = answer;
-                button.onclick = () => checkAnswer(index);
-                answersDiv.appendChild(button);
-            });
-
-            if (currentQuestionIndex === filteredQuestions.length - 1) {
-                document.getElementById("finish-btn").classList.remove("hidden");
-            } else {
-                document.getElementById("next-btn").classList.remove("hidden");
-            }
-        }
-
-        function checkAnswer(selectedIndex) {
-            const questionObj = filteredQuestions[currentQuestionIndex];
-            document.getElementById("feedback").innerHTML = selectedIndex === questionObj.correct
-                ? `<span class='correct'>Correct!</span> ${questionObj.explanation}`
-                : `<span class='incorrect'>Incorrect.</span> ${questionObj.explanation}`;
-        }
-
-        function finishQuiz() {
-            saveQuizResult();
-            switchPage("statistics-page");
-        }
-
-        function showStatistics() {
-            switchPage("statistics-page");
-        }
-
-        function switchPage(pageId) {
-            document.querySelectorAll(".quiz-container").forEach(el => el.classList.remove("active"));
-            document.getElementById(pageId).classList.add("active");
-        }
-
-        updateTotalQuestionsCount();
-    </script>
 </body>
 </html>
